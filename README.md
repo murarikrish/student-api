@@ -59,25 +59,3 @@ If you send more than 5 requests in a minute fro
 {
   "error": "Rate limit exceeded. Try again in X seconds."
 }
-
-About
-No description, website, or topics provided.
-Resources
- Readme
- Activity
-Stars
- 0 stars
-Watchers
- 0 watching
-Forks
- 0 forks
-Report repository
-Releases
-No releases published
-Packages
-No packages published
-Languages
-JavaScript
-100.0%
-Footer
-© 2025 GitH
