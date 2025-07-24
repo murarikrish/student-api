@@ -52,10 +52,6 @@ You can use [Postman](https://www.postman.com/) to test the API manually.
 {
   "quote": "Arise, awake, and stop not till the goal is reached. — Swami Vivekananda"
 }
-
-##  Rate Limit Exceeded (HTTP 429)
-If you send more than 5 requests in a minute fro
-
 {
   "error": "Rate limit exceeded. Try again in X seconds."
 }
