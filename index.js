@@ -1,17 +1,11 @@
 const express = require('express');
 const rateLimit = require('express-rate-limit');
-const cors = require('cors');
 
 const app = express();
+const PORT = 3000;
 
-// Middleware
-app.use(cors());
-app.use(express.json()); // Parse JSON bodies
-
-const PORT = process.env.PORT || 3000;
-
-// Quotes array (unchanged)
-const quotes = [ "Arise, awake, and stop not till the goal is reached. — Swami Vivekananda",
+const quotes = [
+  "Arise, awake, and stop not till the goal is reached. — Swami Vivekananda",
   "You may never know what results come of your actions, but if you do nothing, there will be no result. — Mahatma Gandhi",
 "Dream, dream, dream. Dreams transform into thoughts and thoughts result in action. — Dr. A.P.J. Abdul Kalam",
 "It is very easy to defeat someone, but it is very hard to win someone. — Dr. A.P.J. Abdul Kalam",
@@ -23,57 +17,29 @@ const quotes = [ "Arise, awake, and stop not till the goal is reached. — Swami
 "The more we come out and do good to others, the more our hearts will be purified.— Swami Vivekananda",
 "When you are inspired by some great purpose, all your thoughts break their bonds.— Patanjali",
 "To succeed in your mission, you must have single-minded devotion to your goal.— Dr. A.P.J. Abdul Kalam"
- ]; 
+];
 
-// Rate limiter config
-const limiter = rateLimit({
-  windowMs: 60 * 1000,
-  max: 5,
+// Rate Limiting: 5 requests per minute per IP
+const quoteLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 5, // limit each IP to 5 requests per windowMs
   standardHeaders: true,
   legacyHeaders: false,
-  handler: (req, res) => { // Changed from 'message' to 'handler'
-    res.status(429).json({
-      error: "Rate limit exceeded",
-      retryAfter: "1 minute"
-    });
+  message: (req, res) => {
+    const retryAfter = Math.ceil((req.rateLimit.resetTime - new Date()) / 1000);
+    return {
+      error:` Rate limit exceeded. Try again in ${retryAfter} seconds.`
+    };
   }
 });
 
-// Routes
-app.get('/', (req, res) => {
-  res.json({
-    message: "Indian Wisdom Quotes API",
-    endpoints: {
-      quote: "/api/quote (GET)",
-      rateLimit: "5 requests/minute"
-    },
-    totalQuotes: quotes.length
-  });
-});
-
-app.get('/api/quote', limiter, (req, res) => {
+// Endpoint: GET /api/quote
+app.get('/api/quote', quoteLimiter, (req, res) => {
   const randomIndex = Math.floor(Math.random() * quotes.length);
-  res.json({
-    quote: quotes[randomIndex],
-    remainingRequests: req.rateLimit.remaining,
-    totalQuotes: quotes.length
-  });
+  res.json({ quote: quotes[randomIndex] });
 });
 
-// Error handlers
-app.use((req, res) => {
-  res.status(404).json({ error: "Endpoint not found" });
-});
-
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: "Internal server error" });
-});
-
-// Start server
+// Starting server
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Local endpoints:`);
-  console.log(`http://localhost:${PORT}/`);
-  console.log(`http://localhost:${PORT}/api/quote`);
+  console.log(`🚀 Quote API running on http://localhost:${PORT}/api/quote`);
 });
