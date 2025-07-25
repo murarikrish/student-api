@@ -1,10 +1,11 @@
 const express = require('express');
 const rateLimit = require('express-rate-limit');
+const cors = require('cors');
 
 const app = express();
-const PORT = 3000;
+app.use(cors());
+const PORT = process.env.PORT || 3000;
 
-//quotes
 const quotes = [
   "Arise, awake, and stop not till the goal is reached. — Swami Vivekananda",
   "You may never know what results come of your actions, but if you do nothing, there will be no result. — Mahatma Gandhi",
@@ -18,29 +19,41 @@ const quotes = [
 "The more we come out and do good to others, the more our hearts will be purified.— Swami Vivekananda",
 "When you are inspired by some great purpose, all your thoughts break their bonds.— Patanjali",
 "To succeed in your mission, you must have single-minded devotion to your goal.— Dr. A.P.J. Abdul Kalam"
+  // ... (keep your existing quotes)
 ];
 
-// Rate Limiting: 5 requests per minute per IP
 const quoteLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: 5, // limit each IP to 5 requests per windowMs
+  windowMs: 60 * 1000,
+  max: 5,
   standardHeaders: true,
   legacyHeaders: false,
-  message: (req, res) => {
-    const retryAfter = Math.ceil((req.rateLimit.resetTime - new Date()) / 1000);
-    return {
-      error:` Rate limit exceeded. Try again in ${retryAfter} seconds.`
-    };
+  message: {
+    error: "Rate limit exceeded",
+    retryAfter: `${Math.ceil((req.rateLimit.resetTime - Date.now()) / 1000)} seconds`,
+    limit: 5
   }
 });
 
-// Endpoint: GET /api/quote
-app.get('/api/quote', quoteLimiter, (req, res) => {
-  const randomIndex = Math.floor(Math.random() * quotes.length);
-  res.json({ quote: quotes[randomIndex] });
+// Root endpoint
+app.get('/', (req, res) => {
+  res.json({
+    message: "Indian Quotes API",
+    endpoints: {
+      randomQuote: "/api/quote",
+      rateLimit: "5 requests/minute"
+    }
+  });
 });
 
-// Starting server
+// Quote endpoint
+app.get('/api/quote', quoteLimiter, (req, res) => {
+  const randomIndex = Math.floor(Math.random() * quotes.length);
+  res.json({ 
+    quote: quotes[randomIndex],
+    remaining: req.rateLimit.remaining
+  });
+});
+
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}/api/quote`);
+  console.log(`Server running on port ${PORT}`);
 });
